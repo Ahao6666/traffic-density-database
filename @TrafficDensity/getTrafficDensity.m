@@ -27,7 +27,11 @@ obj.cellLonCutpoints = obj.(termaplegendstr)(3):1/obj.(termaplegendstr)(1):obj.(
 
 % Get terrain
 [lonm,latm] = meshgrid(obj.cellLonMidpoints,obj.cellLatMidpoints);
-obj.el = ltln2val(obj.globe.Z,obj.globe.refvec,latm,lonm,'bilinear')*obj.f2m; % Convert to ft
+% 将旧的 refvec 转换为新的地理参考对象
+R = refvecToGeoRasterReference(obj.globe.refvec, size(obj.globe.Z));
+
+% 使用转换后的R
+obj.el = geointerp(obj.globe.Z, R, latm, lonm, 'linear') * obj.f2m;
 obj.el(isnan(obj.el))=0; % Set to zero where no data exists
 
 % Get cell area [NM^2]
@@ -77,8 +81,10 @@ for ac = 1:length(ACcategory)
     sumdensity = accumarray(accuminds,TotalTime,[ncells,1],@sum); % Observed aircraft seconds
     avgdensity = sumdensity/obj.obshrs/obj.hr2s; % Average number of aircraft in each cell    
     if obj.computemax % Run the mex file for computing the maximum density, which is considerably faster than Matlab built-in (see buildaccumarray.m under Utilities)
-        maxdensity = double(accumarraymax_mex(accuminds,uint32(TotalTime),ncells))/24*obj.jobdata.GRID_T_NUM/obj.hr2s;
-        maxocc = double(accumarraymax_mex(accuminds,uint32(MaxOcc(indsac)),ncells));
+        % maxdensity = double(accumarraymax_mex(accuminds,uint32(TotalTime),ncells))/24*obj.jobdata.GRID_T_NUM/obj.hr2s;
+        maxdensity = double(accumarray(accuminds, uint32(TotalTime), [ncells, 1], @max))/24*obj.jobdata.GRID_T_NUM/obj.hr2s;
+        % maxocc = double(accumarraymax_mex(accuminds,uint32(MaxOcc(indsac)),ncells));
+        maxocc = double(accumarray(accuminds, uint32(MaxOcc(indsac)), [ncells, 1], @max));
     
         % Reformat densities into matrices
         obj.count(currACcat).cmax = reshape(maxdensity,obj.(jobdatastr).GRID_Y_NUM,obj.(jobdatastr).GRID_X_NUM,obj.jobdata.GRID_H_NUM);

@@ -596,6 +596,21 @@ end
 colormap(cm);
 if ~obj.processtrack || plotDataOverride
     meshm(data(obj.cellLatLim(1):obj.cellLatLim(2),obj.cellLonLim(1):obj.cellLonLim(2)),termaplegend)
+    %%  方案1
+    % R = refvecToGeoRasterReference(termaplegend, size(data));
+    % geoshow(data(obj.cellLatLim(1):obj.cellLatLim(2),obj.cellLonLim(1):obj.cellLonLim(2)), R)
+    %%  方案2
+    % 将termaplegend转换为新的地理参考对象格式
+    % R = refvecToGeoRasterReference(termaplegend, size(data));
+    % 然后使用新的格式调用meshm
+    % meshm(data(obj.cellLatLim(1):obj.cellLatLim(2),obj.cellLonLim(1):obj.cellLonLim(2)), R)
+    %%  方案3
+    % 1. 将 termaplegend 转换为地理栅格参考对象
+    % R = refvecToGeoRasterReference(termaplegend, size(data));
+    % 2. 提取子区域数据
+    % subdata = data(obj.cellLatLim(1):obj.cellLatLim(2), obj.cellLonLim(1):obj.cellLonLim(2));
+    % 3. 用 geoshow 显示（自动应用颜色映射）
+    % geoshow(subdata, R);
 end
 hold on
 geoshow([obj.states.Lat],[obj.states.Lon],'Color',[0.8,0.8,0.8]);
